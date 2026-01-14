@@ -3,7 +3,8 @@ This is the project that will be used to teach the upcoming PHL Code Club Rust w
 Participants will learn Rust fundamentals while building a simple version of `curl`.
 
 ## Install your rust binary
-`cargo install --path .`
+Just run `cargo install --path .`
 
-To uninstall:
-`cargo uninstall my-app`
+You can now invoke your app by typing the package name in `cargo.toml`!
+
+To uninstall your app, just run `cargo uninstall my-app`.
