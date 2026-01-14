@@ -1,6 +1,5 @@
-## Simple Curl Impl in Rust
-This is the project that will be used to teach the upcoming PHL Code Club Rust workshop.
-Participants will learn Rust fundamentals while building a simple version of `curl`.
+## Simple Curl in Rust
+Today you'll learn the fundamentals of Rust by building a simple version of `curl`.
 
 ## Install your rust binary
 Just run `cargo install --path .`
