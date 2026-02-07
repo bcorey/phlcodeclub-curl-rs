@@ -5,6 +5,7 @@ use reqwest::blocking::Response;
 fn main() {
     // convert our args to the input we expect
     let input: Input = std::env::args().into();
+    println!("{:?}", std::env::args());
     println!("Fetching {}...", input.url);
 
     // create a http client
