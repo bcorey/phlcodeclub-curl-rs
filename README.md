@@ -6,7 +6,7 @@ Today you'll learn the fundamentals of Rust by building a simple version of [cUR
 
 There are so many great things going for Rust, but here are a few of the main reasons:
 
-- Its fast & compiles into a static binary.
+- It is fast & compiles into a static binary.
 - The compiler has many built-in features that keep you from writing certain
 classes of bugs
 - It has a very expressive type system that allows you to encode semantics
@@ -55,13 +55,12 @@ You might have heard Rust is very difficult or obtuse language to learn. This is
 partially true. Writing complex software in Rust comes with additional cognitive
 overhead. You need to shift your thinking to fit with the rules of the Rust compiler.
 _However_, you can create very fast, useful software just with a
-beginner-to-intermediate level grasp of the language. When in doubt, just
-implement the Copy trait! 😹
+beginner-to-intermediate level grasp of the language.
 
 ## Setup
 
 [Install Rust here](https://rust-lang.org/tools/install/) with the handy curl
-command. There are some extra steps for Windows 😿.
+command. There are some extra steps for Windows.
 
 Once you have the Rust tool chain installed:
 
@@ -102,10 +101,11 @@ Open the project folder in your preferred editor.
 Now, in `main.rs`, change the string in the print statement and run `cargo run`
 to see your new message.
 
-This is a good time to install the [rust-analyzer](https://rust-analyzer.github.io/)
-plugin. Most editors should have this in their marketplace. I would assume if your
-editor doesn't have a marketplace you either don't need the help of the Rust LSP
-or already know how to install it.
+This is a good time to install the [rust-analyzer](https://rust-analyzer.github.io/) plugin.
+
+- VSCode: search in marketplace
+- Zed: preinstalled
+- Neovim, other, etc: may require more setup. Not necessary for this project.
 
 ### Arguments
 
