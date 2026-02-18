@@ -445,3 +445,7 @@ Just run `cargo install --path .`
 You can now invoke your app by running `curlrs`! It works anywhere in your computer, not just in the project directory.
 
 To uninstall your app, just run `cargo uninstall curlrs`.
+
+
+## Next Steps
+Try out the [Rustlings](https://rustlings.rust-lang.org/) exercises!
