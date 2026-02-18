@@ -107,7 +107,7 @@ This is a good time to install the [rust-analyzer](https://rust-analyzer.github.
 - Zed: preinstalled
 - Neovim, other, etc: may require more setup. Not necessary for this project.
 
-### Arguments
+## Step 1: Arguments
 
 Let's see how to read arguments from the command line.
 
@@ -131,6 +131,25 @@ and prints to the console. It is similar to `printf` but without the C style pla
   types such as `structs` and `enums` without having to manually write code to
   do that.
 
+## Step 2: Using the arguments
+
+We use `.next()` on our args iterator to get the next argument. This means we have to declare the args variable as mutable!
+
+```rust
+fn main() {
+    let mut args = std::env::args();
+
+    let program_path = args.next();
+    let request_type = args.next();
+    let url = args.next();
+    println!("{program_path:?}, {request_type:?}, {url:?}");
+}
+```
+
+Note that we get an Option<String> from the iterator, instead of `String` or `null`. `null` doesn't exist in rust!
+
+## Step 3: using dependencies!
+
 ### Dependencies
 
 Add this line to your `cargo.toml` under `[dependencies]`:
@@ -141,6 +160,29 @@ reqwest = {version = "0.12", features = ["blocking"] }
 
 This tells `cargo` that your project depends on things in `reqwest` library.
 Libraries are `crates` in Rust. The main crate registry is [crates.io](https://crates.io/crates/reqwest).
+
+Now let's use this library in our code to actually fire off an HTTP request.
+
+```rust
+fn main() {
+    let mut args = std::env::args();
+
+    let program_path = args.next().unwrap();
+    let request_type = args.next().unwrap();
+    let url = args.next().unwrap();
+    println!("{program_path:?}, {request_type:?}, {url:?}");
+
+    let client = reqwest::blocking::Client::new();
+    let mut response = client.get(url).send().unwrap();
+    println!("{}", response.status());
+
+    response
+        .copy_to(&mut std::io::stdout())
+        .expect("Failed to print response body");
+}
+```
+
+## Step 4: Using Structs
 
 ### Structs
 
@@ -164,6 +206,42 @@ struct MyOtherStruct {
 }
 ```
 
+Armed with this knowledge, let's go ahead and make a struct that represents our input, and make a function that converts `args` to our struct!
+
+```rust
+fn main() {
+    let args = std::env::args();
+    let input = Input::from_args(args);
+
+    let client = reqwest::blocking::Client::new();
+    let mut response = client.get(input.url).send().unwrap();
+    println!("{}", response.status());
+
+    response
+        .copy_to(&mut std::io::stdout())
+        .expect("Failed to print response body");
+}
+
+struct Input {
+    request_type: String,
+    url: String,
+}
+
+impl Input {
+    fn from_args(mut args: std::env::Args) -> Input {
+        let _program_path = args.next();
+        let request_type = args.next().unwrap();
+        let url = args.next().unwrap();
+        Input { request_type, url }
+    }
+}
+```
+
+
+## Step 5: Get and Post with enums
+
+We're using a String to represent our request type - this is something that's best done with an enum.
+
 ### Enums
 
 `Enums` are very powerful in Rust. Not only are they enumerated values like in
@@ -179,18 +257,66 @@ enum RequestType {
     Get,
     Post,
 }
+
 ```
-
-However, in Rust we can encode additional data into the `enum` that might only
-have data for specific values in the set. In this case the `Post` variant
-includes optional `String` data that represents the request body.
-
+In Rust, we can put stuff inside the variants!
 ```rust
-enum RequestType {
-    Get,
-    Post(Option<String>),
+enum Vehicle {
+    Train(u8), // train has some number of cars
+    Bus, // bus is always one car
 }
 ```
+
+In our project we'll use a basic enum like this:
+```rust
+fn main() {
+    let args = std::env::args();
+    let input = Input::from_args(args);
+
+    let client = reqwest::blocking::Client::new();
+
+    let mut response = match input.request_type {
+        RequestType::Get => client.get(input.url).send().unwrap(),
+        RequestType::Post => client.post(input.url).send().unwrap(),
+    };
+
+    println!("{}", response.status());
+
+    response
+        .copy_to(&mut std::io::stdout())
+        .expect("Failed to print response body");
+}
+
+enum RequestType {
+    Get,
+    Post,
+}
+
+impl RequestType {
+    fn from_string(arg: String) -> RequestType {
+        if arg == "post" {
+            return RequestType::Post;
+        }
+        return RequestType::Get;
+    }
+}
+
+struct Input {
+    request_type: RequestType,
+    url: String,
+}
+
+impl Input {
+    fn from_args(mut args: std::env::Args) -> Input {
+        let _program_path = args.next();
+        let request_type = RequestType::from_string(args.next().unwrap());
+        let url = args.next().unwrap();
+        Input { request_type, url }
+    }
+}
+```
+
+## Step 6: Implementing traits
 
 ### Traits
 
@@ -218,10 +344,104 @@ a `String` but we _want_ a `RequestType`. So, we implement
 `From<String>` for `RequestType`. Now we just have to call `into()` on a string
 to try and convert it into our `RequestType`.
 
-## Install Your Rust Binary
+```rust
+fn main() {
+    let input: Input = std::env::args().into();
+
+    let client = reqwest::blocking::Client::new();
+
+    let mut response = match input.request_type {
+        RequestType::Get => client.get(input.url).send().unwrap(),
+        RequestType::Post => client.post(input.url).send().unwrap(),
+    };
+
+    println!("{}", response.status());
+
+    response
+        .copy_to(&mut std::io::stdout())
+        .expect("Failed to print response body");
+}
+
+enum RequestType {
+    Get,
+    Post,
+}
+
+impl From<String> for RequestType {
+    fn from(arg: String) -> RequestType {
+        if arg == "post" {
+            return RequestType::Post;
+        }
+        return RequestType::Get;
+    }
+}
+
+struct Input {
+    request_type: RequestType,
+    url: String,
+}
+
+impl From<std::env::Args> for Input {
+    fn from(mut args: std::env::Args) -> Self {
+        let _program_path = args.next();
+        let request_type = args.next().unwrap().into();
+        let url = args.next().unwrap();
+        Input { request_type, url }
+    }
+}
+```
+
+## Step 7: Request body
+We want our Post requests to have some body. Let's add this as a final optional argument to our input struct:
+```rust
+struct Input {
+    request_type: RequestType,
+    url: String,
+    body: Option<String>,
+}
+
+impl From<std::env::Args> for Input {
+    fn from(mut args: std::env::Args) -> Self {
+        let _program_path = args.next();
+        let request_type = args.next().unwrap().into();
+        let url = args.next().unwrap();
+        let body = args.next();
+        Input {
+            request_type,
+            url,
+            body,
+        }
+    }
+}
+```
+Note that we're not unwrapping this option because it might not always be there!
+
+Now we need to send this body inside our post request if it's there. This is a sticky state management problem! Thankfully `match` comes in handy.
+
+Remember how we can use `match` on an enum and it makes sure we always handle each possibility? Well, we can use match on combinations of enums and guarantee that all combinations are accounted for:
+
+```rust
+fn main() {
+    let input: Input = std::env::args().into();
+
+    let client = reqwest::blocking::Client::new();
+
+    let request = match (input.request_type, input.body) {
+        (RequestType::Get, _) => client.get(input.url),
+        (RequestType::Post, Some(body)) => client.post(input.url).body(body),
+        (RequestType::Post, None) => client.post(input.url),
+    };
+
+    ...
+}
+```
+
+`match (input.request_type, input.body)` says that we're matching a pair, or `tuple` of arguments. Each branch in the match statement contains a pair of corresponding outcomes. And it's completely exhaustive - if we don't account for everything the compiler will yell at us. This is a great way to make sure you've thought about all the possible states of your program.
+
+## Step 8: Install Your Rust Binary
 
 Just run `cargo install --path .`
 
-You can now invoke your app by running `curlrs`!
+You can now invoke your app by running `curlrs`! It works anywhere in your computer, not just in the project directory.
 
 To uninstall your app, just run `cargo uninstall curlrs`.
